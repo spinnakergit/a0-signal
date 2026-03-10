@@ -1,0 +1,136 @@
+<div class="signal-dashboard" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color, #e0e0e0);">
+        <h3 style="margin: 0; color: #3a76f0;">Signal Integration</h3>
+        <span data-sig="status" style="padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; background: #fce4ec; color: #c62828;">Checking...</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px;">
+        <div style="text-align: center; padding: 10px; background: var(--bg-secondary, #f8f9fa); border-radius: 6px;">
+            <div style="font-size: 20px; font-weight: 700; color: #3a76f0;" data-sig="contacts">-</div>
+            <div style="font-size: 11px; color: var(--text-secondary, #888);">Bridge Contacts</div>
+        </div>
+        <div style="text-align: center; padding: 10px; background: var(--bg-secondary, #f8f9fa); border-radius: 6px;">
+            <div style="font-size: 20px; font-weight: 700; color: #3a76f0;" data-sig="encryption">E2E</div>
+            <div style="font-size: 11px; color: var(--text-secondary, #888);">Encryption</div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+        <button data-sig="test-btn" style="background: #3a76f0; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Test Connection</button>
+    </div>
+
+    <!-- Security Info -->
+    <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 6px; padding: 10px; margin-bottom: 16px; font-size: 11px; color: #2e7d32;">
+        <strong>End-to-End Encrypted</strong> — All messages are encrypted using the Signal Protocol (X3DH + Double Ratchet). The signal-cli backend uses the official libsignal-client library, the same cryptographic library used by the Signal app.
+    </div>
+
+    <!-- Chat Bridge Section -->
+    <div style="padding-top: 12px; border-top: 1px solid var(--border-color, #e0e0e0);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #3a76f0;">Chat Bridge</h4>
+            <span data-sig="bridge-status" style="padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; background: #f5f5f5; color: #888;">Unknown</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+            <button data-sig="bridge-start" style="background: #43a047; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Start Bridge</button>
+            <button data-sig="bridge-stop" style="background: #e53935; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Stop Bridge</button>
+            <button data-sig="bridge-refresh" style="background: var(--bg-secondary, #f0f0f0); color: var(--text-primary, #333); border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Refresh Status</button>
+        </div>
+        <div data-sig="bridge-info" style="font-size: 11px; color: var(--text-secondary, #888);"></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const fetchApi = globalThis.fetchApi || fetch;
+    const API_TEST = '/api/plugins/signal/signal_test';
+    const API_BRIDGE = '/api/plugins/signal/signal_bridge_api';
+
+    function $(key) { return document.querySelector('[data-sig="' + key + '"]'); }
+
+    function setBridgeBadge(status) {
+        const badge = $('bridge-status');
+        if (!badge) return;
+        if (status.running && status.status === 'connected') {
+            badge.textContent = 'Connected';
+            badge.style.background = '#e8f5e9';
+            badge.style.color = '#2e7d32';
+            if (status.contacts !== undefined) {
+                $('contacts').textContent = status.contacts;
+            }
+        } else if (status.running) {
+            badge.textContent = status.status || 'Connecting...';
+            badge.style.background = '#fff3e0';
+            badge.style.color = '#e65100';
+        } else {
+            badge.textContent = status.status || 'Stopped';
+            badge.style.background = '#f5f5f5';
+            badge.style.color = '#888';
+        }
+    }
+
+    async function bridgeAction(action, btn) {
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+        const info = $('bridge-info');
+        try {
+            const resp = await fetchApi(API_BRIDGE, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: action})
+            });
+            const data = await resp.json();
+            setBridgeBadge(data);
+            if (info) {
+                if (data.ok) {
+                    info.textContent = data.message || '';
+                    info.style.color = '#2e7d32';
+                } else {
+                    info.textContent = data.error || 'Unknown error';
+                    info.style.color = '#c62828';
+                }
+                setTimeout(() => { info.textContent = ''; }, 5000);
+            }
+        } catch (e) {
+            if (info) { info.textContent = 'API unavailable'; info.style.color = '#c62828'; }
+        }
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    }
+
+    async function testConnection() {
+        const badge = $('status');
+        badge.textContent = 'Testing...';
+        badge.style.background = '#fff3e0';
+        badge.style.color = '#e65100';
+        try {
+            const resp = await fetchApi(API_TEST, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: '{}'
+            });
+            const data = await resp.json();
+            if (data.ok) {
+                badge.textContent = 'Connected (API v' + (data.api_version || '?') + ')';
+                badge.style.background = '#e8f5e9';
+                badge.style.color = '#2e7d32';
+            } else {
+                badge.textContent = data.error || 'Error';
+                badge.style.background = '#fce4ec';
+                badge.style.color = '#c62828';
+            }
+        } catch (e) {
+            badge.textContent = 'API unavailable';
+            badge.style.background = '#fce4ec';
+            badge.style.color = '#c62828';
+        }
+    }
+
+    // Bind buttons
+    $('test-btn').addEventListener('click', testConnection);
+    $('bridge-start').addEventListener('click', function() { bridgeAction('start', this); });
+    $('bridge-stop').addEventListener('click', function() { bridgeAction('stop', this); });
+    $('bridge-refresh').addEventListener('click', function() { bridgeAction('status', this); });
+
+    // Auto-check on load
+    testConnection();
+    bridgeAction('status');
+})();
+</script>

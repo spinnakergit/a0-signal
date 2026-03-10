@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.log
+
+# Runtime config (contains secrets)
+config.json
+
+# Runtime data
+data/*.json
+data/
+
+# Sensitive files
+*.key
+*.pem
+*.cert
+
+# Backup files
+*.bak
+*~

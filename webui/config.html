@@ -1,0 +1,366 @@
+<div class="signal-config" id="signal-config-root" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px;">
+    <h3 style="color: #3a76f0; margin: 0 0 16px 0;">Signal Settings</h3>
+
+    <!-- Installation Mode -->
+    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid #3a76f0; border-radius: 6px; background: #e3f2fd;">
+        <div style="font-size: 12px; font-weight: 600; color: #1565c0; text-transform: uppercase; margin-bottom: 8px;">Installation Mode</div>
+        <div style="display: flex; gap: 12px; margin-bottom: 8px;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                <input type="radio" name="sig-mode" data-sig="mode-integrated" value="integrated" checked> <strong>Integrated</strong>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                <input type="radio" name="sig-mode" data-sig="mode-external" value="external"> <strong>External</strong>
+            </label>
+        </div>
+        <div data-sig="mode-info-integrated" style="font-size: 10px; color: #1565c0;">
+            signal-cli runs natively inside the Agent Zero container. Simplest setup — no separate Docker container needed.
+            Run <code>python initialize.py --integrated</code> to install.
+        </div>
+        <div data-sig="mode-info-external" style="font-size: 10px; color: #1565c0; display: none;">
+            Uses a separate <code>signal-cli-rest-api</code> Docker container (bbernhard). See docs/SETUP_SIGNAL_API.md for setup.
+        </div>
+    </div>
+
+    <!-- Signal API Connection -->
+    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Signal API Connection</div>
+        <div data-sig="api-hint-integrated" style="font-size: 10px; color: var(--text-secondary, #888); margin-bottom: 8px;">
+            The local signal-cli daemon runs on <code>127.0.0.1:8080</code>. Usually no configuration needed.
+        </div>
+        <div data-sig="api-hint-external" style="font-size: 10px; color: var(--text-secondary, #888); margin-bottom: 8px; display: none;">
+            Requires a running <code>signal-cli-rest-api</code> instance.
+            Keep the API on a private Docker network — never expose to the internet.
+        </div>
+        <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">API Base URL</label>
+        <input type="text" data-sig="api-url" placeholder="http://127.0.0.1:8080" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+        <div data-sig="url-hint-integrated" style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">Leave blank for default (127.0.0.1:8080).</div>
+        <div data-sig="url-hint-external" style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px; display: none;">Internal Docker URL of the signal-cli-rest-api container (e.g. http://signal-api:8080).</div>
+
+        <div data-sig="token-section" style="display: none;">
+            <label style="font-size: 12px; font-weight: 500; display: block; margin-top: 10px; margin-bottom: 4px;">API Auth Token (Optional)</label>
+            <input type="password" data-sig="api-token" placeholder="Bearer token for secured proxy" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+            <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">Only needed if using a secured proxy (e.g. secured-signal-api).</div>
+        </div>
+    </div>
+
+    <!-- Phone Number -->
+    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Registered Phone Number</div>
+        <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Signal Phone Number</label>
+        <input type="text" data-sig="phone-number" placeholder="+1234567890" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+        <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">E.164 format. This is the number registered/linked with signal-cli. Use a dedicated number, not your personal one.</div>
+    </div>
+
+    <!-- Security: Allowed Contacts -->
+    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Access Control</div>
+        <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Allowed Contacts (one per line)</label>
+        <textarea data-sig="allowed-contacts" rows="3" placeholder="Leave empty for all contacts (use with caution)" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box; resize: vertical;"></textarea>
+        <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">Phone numbers or group IDs. Empty = allow all.</div>
+    </div>
+
+    <!-- Memory -->
+    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Memory</div>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer;">
+            <input type="checkbox" data-sig="auto-summaries" checked> Auto-save summaries to memory
+        </label>
+    </div>
+
+    <!-- Polling -->
+    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Message Polling</div>
+        <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Poll Interval (seconds)</label>
+        <input type="number" data-sig="poll-interval" value="30" min="5" max="300" style="width: 80px; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px;">
+        <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">How often to check for new messages when the bridge is running (5-300 seconds).</div>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 8px; cursor: pointer;">
+            <input type="checkbox" data-sig="auto-images" checked> Auto-analyze image attachments
+        </label>
+    </div>
+
+    <!-- Chat Bridge -->
+    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Chat Bridge</div>
+        <div style="font-size: 11px; color: var(--text-secondary, #888); margin-bottom: 8px;">
+            Route Signal messages through Agent Zero's LLM. Contacts are managed via the <code>signal_chat</code> tool.
+        </div>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 8px;">
+            <input type="checkbox" data-sig="bridge-autostart"> Auto-start chat bridge on agent startup
+        </label>
+
+        <label style="font-size: 12px; font-weight: 500; display: block; margin-top: 8px; margin-bottom: 4px;">Allowed Bridge Numbers (one per line)</label>
+        <textarea data-sig="bridge-numbers" rows="2" placeholder="Leave empty to use allowed contacts list" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box; resize: vertical;"></textarea>
+        <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">Only these numbers will get responses. Empty = use allowed_contacts.</div>
+
+        <div style="border-top: 1px solid var(--border-color, #e0e0e0); padding-top: 10px; margin-top: 12px;">
+            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary, #666); margin-bottom: 6px;">Elevated Mode (2FA)</div>
+            <div style="font-size: 10px; color: var(--text-secondary, #888); margin-bottom: 8px;">
+                When enabled, authenticated users can unlock full Agent Zero access from Signal using <code>!auth &lt;key&gt;</code>.
+                Default mode is restricted (chat only, no tools).
+            </div>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 8px;">
+                <input type="checkbox" data-sig="allow-elevated"> Allow elevated mode
+            </label>
+            <div data-sig="elevated-settings" style="display: none; margin-top: 8px;">
+                <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Auth Key</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <input type="text" data-sig="auth-key" readonly style="flex: 1; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 11px; font-family: monospace; background: var(--bg-secondary, #f5f5f5); box-sizing: border-box;">
+                    <button data-sig="regen-key-btn" style="background: #3a76f0; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;">Regenerate</button>
+                    <button data-sig="copy-key-btn" style="background: var(--bg-secondary, #e0e0e0); color: var(--text-primary, #333); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;">Copy</button>
+                </div>
+                <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 4px;">
+                    Share this key securely (in person or via another E2E encrypted channel). Users send <code>!auth &lt;key&gt;</code> via Signal to elevate.
+                </div>
+                <label style="font-size: 12px; font-weight: 500; display: block; margin-top: 10px; margin-bottom: 4px;">Session Timeout</label>
+                <select data-sig="session-timeout" style="padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px;">
+                    <option value="1800">30 minutes</option>
+                    <option value="3600" selected>1 hour</option>
+                    <option value="7200">2 hours</option>
+                    <option value="14400">4 hours</option>
+                    <option value="28800">8 hours</option>
+                    <option value="0">Never expire</option>
+                </select>
+                <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">How long elevated sessions last before requiring re-authentication.</div>
+                <div data-sig="never-expire-warning" style="display: none; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 4px; padding: 6px 8px; font-size: 10px; color: #e65100; margin-top: 6px;">
+                    <strong>Security warning:</strong> "Never expire" means an elevated session stays active until the bridge restarts or the user sends <code>!deauth</code>. If the auth key is compromised, the attacker retains full agent access indefinitely.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security -->
+    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; background: #f1f8e9;">
+        <div style="font-size: 12px; font-weight: 600; color: #2e7d32; text-transform: uppercase; margin-bottom: 8px;">Security</div>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 6px;">
+            <input type="checkbox" data-sig="sanitize-content" checked> Sanitize message content (injection defense)
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 6px;">
+            <input type="checkbox" data-sig="strip-injections" checked> Strip prompt injection patterns
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer;">
+            <input type="checkbox" data-sig="strict-contacts"> Strict contact enforcement (reject unknown senders)
+        </label>
+    </div>
+
+    <button data-sig="save-btn" style="background: #3a76f0; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">Save Signal Settings</button>
+    <span data-sig="save-status" style="margin-left: 10px; font-size: 12px;"></span>
+    <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 8px;">Use this button (not the outer framework Save) to save Signal settings. Sensitive values are stored with restricted file permissions.</div>
+</div>
+
+<script>
+(function() {
+    const fetchApi = globalThis.fetchApi || fetch;
+    const root = document.querySelector('#signal-config-root') ||
+                 document.querySelector('.signal-config') ||
+                 document.currentScript?.parentElement;
+
+    if (!root) { console.error('[Signal Config] Cannot find config root element'); return; }
+
+    function el(key) {
+        return root.querySelector('[data-sig="' + key + '"]');
+    }
+
+    async function loadConfig() {
+        try {
+            const resp = await fetchApi('/api/plugins/signal/signal_config_api', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'get'})
+            });
+            const c = await resp.json();
+            console.log('[Signal Config] Loaded:', JSON.stringify(c));
+
+            // Set mode radio
+            const mode = c.api?.mode || 'integrated';
+            const modeRadio = el('mode-' + mode);
+            if (modeRadio) modeRadio.checked = true;
+            toggleMode();
+
+            if (c.api?.base_url) el('api-url').value = c.api.base_url;
+            if (c.api?.auth_token) el('api-token').value = c.api.auth_token;
+            if (c.phone_number) el('phone-number').value = c.phone_number;
+            if (c.allowed_contacts?.length) el('allowed-contacts').value = c.allowed_contacts.join('\n');
+            if (c.memory) {
+                el('auto-summaries').checked = c.memory.auto_save_summaries !== false;
+            }
+            if (c.polling) {
+                el('poll-interval').value = c.polling.interval_seconds || 30;
+                el('auto-images').checked = c.polling.auto_analyze_images !== false;
+            }
+            if (c.chat_bridge) {
+                el('bridge-autostart').checked = c.chat_bridge.auto_start === true;
+                if (c.chat_bridge.allowed_numbers?.length) {
+                    el('bridge-numbers').value = c.chat_bridge.allowed_numbers.join('\n');
+                }
+                el('allow-elevated').checked = c.chat_bridge.allow_elevated === true;
+                if (c.chat_bridge.auth_key) el('auth-key').value = c.chat_bridge.auth_key;
+                const timeoutSec = c.chat_bridge.session_timeout;
+                if (timeoutSec !== undefined) el('session-timeout').value = String(timeoutSec);
+                toggleElevatedSettings();
+                toggleNeverExpireWarning();
+            }
+            if (c.security) {
+                el('sanitize-content').checked = c.security.sanitize_content !== false;
+                el('strip-injections').checked = c.security.strip_injection_patterns !== false;
+                el('strict-contacts').checked = c.security.strict_contact_enforcement === true;
+            }
+        } catch (e) {
+            console.error('[Signal Config] Load error:', e);
+        }
+    }
+
+    function toggleMode() {
+        const isExternal = el('mode-external')?.checked;
+        // Mode info text
+        const infoInt = el('mode-info-integrated');
+        const infoExt = el('mode-info-external');
+        if (infoInt) infoInt.style.display = isExternal ? 'none' : 'block';
+        if (infoExt) infoExt.style.display = isExternal ? 'block' : 'none';
+        // API hints
+        const hintInt = el('api-hint-integrated');
+        const hintExt = el('api-hint-external');
+        if (hintInt) hintInt.style.display = isExternal ? 'none' : 'block';
+        if (hintExt) hintExt.style.display = isExternal ? 'block' : 'none';
+        // URL hints
+        const urlHintInt = el('url-hint-integrated');
+        const urlHintExt = el('url-hint-external');
+        if (urlHintInt) urlHintInt.style.display = isExternal ? 'none' : 'block';
+        if (urlHintExt) urlHintExt.style.display = isExternal ? 'block' : 'none';
+        // URL placeholder
+        const urlInput = el('api-url');
+        if (urlInput) urlInput.placeholder = isExternal ? 'http://signal-api:8080' : 'http://127.0.0.1:8080';
+        // Token section (external only)
+        const tokenSec = el('token-section');
+        if (tokenSec) tokenSec.style.display = isExternal ? 'block' : 'none';
+    }
+
+    function toggleElevatedSettings() {
+        const show = el('allow-elevated')?.checked;
+        const settings = el('elevated-settings');
+        if (settings) settings.style.display = show ? 'block' : 'none';
+    }
+
+    function toggleNeverExpireWarning() {
+        const val = el('session-timeout')?.value;
+        const warning = el('never-expire-warning');
+        if (warning) warning.style.display = val === '0' ? 'block' : 'none';
+    }
+
+    async function saveConfig() {
+        const status = el('save-status');
+
+        const selectedMode = el('mode-external')?.checked ? 'external' : 'integrated';
+        const defaultUrl = selectedMode === 'external' ? 'http://signal-api:8080' : '';
+
+        const config = {
+            action: 'set',
+            api: {
+                mode: selectedMode,
+                base_url: el('api-url')?.value || defaultUrl,
+                auth_token: el('api-token')?.value || ''
+            },
+            phone_number: el('phone-number')?.value || '',
+            allowed_contacts: (el('allowed-contacts')?.value || '').split('\n').map(s => s.trim()).filter(Boolean),
+            defaults: { message_limit: 100 },
+            memory: {
+                auto_save_summaries: el('auto-summaries')?.checked ?? true,
+                export_format: "markdown"
+            },
+            polling: {
+                interval_seconds: parseInt(el('poll-interval')?.value) || 30,
+                auto_analyze_images: el('auto-images')?.checked ?? true
+            },
+            chat_bridge: {
+                auto_start: el('bridge-autostart')?.checked ?? false,
+                allowed_numbers: (el('bridge-numbers')?.value || '').split('\n').map(s => s.trim()).filter(Boolean),
+                allow_elevated: el('allow-elevated')?.checked ?? false,
+                auth_key: el('auth-key')?.value || '',
+                session_timeout: parseInt(el('session-timeout')?.value) || 3600
+            },
+            security: {
+                max_message_length: 4000,
+                max_bulk_input_chars: 200000,
+                sanitize_content: el('sanitize-content')?.checked ?? true,
+                strip_injection_patterns: el('strip-injections')?.checked ?? true,
+                strict_contact_enforcement: el('strict-contacts')?.checked ?? false
+            }
+        };
+
+        console.log('[Signal Config] Saving...');
+
+        try {
+            const resp = await fetchApi('/api/plugins/signal/signal_config_api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+            const result = await resp.json();
+            console.log('[Signal Config] Save result:', JSON.stringify(result));
+
+            if (result.ok) {
+                status.style.color = '#2e7d32';
+                status.textContent = 'Saved!';
+            } else {
+                status.style.color = '#c62828';
+                status.textContent = 'Error: ' + (result.error || 'Unknown');
+            }
+            setTimeout(() => { status.textContent = ''; }, 5000);
+        } catch (e) {
+            status.style.color = '#c62828';
+            status.textContent = 'Network error: ' + e.message;
+            console.error('[Signal Config] Save error:', e);
+        }
+    }
+
+    // Bind save button
+    const saveBtn = el('save-btn');
+    if (saveBtn) saveBtn.addEventListener('click', saveConfig);
+
+    // Bind mode radio buttons
+    const modeInt = el('mode-integrated');
+    const modeExt = el('mode-external');
+    if (modeInt) modeInt.addEventListener('change', toggleMode);
+    if (modeExt) modeExt.addEventListener('change', toggleMode);
+
+    // Bind elevated mode toggle
+    const elevatedToggle = el('allow-elevated');
+    if (elevatedToggle) elevatedToggle.addEventListener('change', toggleElevatedSettings);
+
+    // Bind session timeout change
+    const timeoutSelect = el('session-timeout');
+    if (timeoutSelect) timeoutSelect.addEventListener('change', toggleNeverExpireWarning);
+
+    // Bind regenerate key button
+    const regenBtn = el('regen-key-btn');
+    if (regenBtn) regenBtn.addEventListener('click', async function() {
+        try {
+            const resp = await fetchApi('/api/plugins/signal/signal_config_api', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'generate_auth_key'})
+            });
+            const result = await resp.json();
+            if (result.auth_key) {
+                el('auth-key').value = result.auth_key;
+            }
+        } catch (e) {
+            console.error('[Signal Config] Key generation error:', e);
+        }
+    });
+
+    // Bind copy key button
+    const copyBtn = el('copy-key-btn');
+    if (copyBtn) copyBtn.addEventListener('click', function() {
+        const key = el('auth-key')?.value;
+        if (key) {
+            navigator.clipboard.writeText(key).then(() => {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+            });
+        }
+    });
+
+    // Load config on init
+    loadConfig();
+})();
+</script>

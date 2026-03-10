@@ -1,0 +1,9 @@
+name: signal
+title: Signal Integration
+description: Secure messaging via Signal. Send and receive messages, manage groups, and use Signal as a real-time chat bridge to Agent Zero with end-to-end encryption via the Signal Protocol.
+version: 1.0.0
+settings_sections:
+  - external
+per_project_config: true
+per_agent_config: true
+always_enabled: false

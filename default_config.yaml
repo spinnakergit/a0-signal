@@ -1,0 +1,74 @@
+# Signal Plugin Configuration
+#
+# Two installation modes:
+#   integrated — signal-cli runs natively inside the Agent Zero container
+#                (default, simplest, no extra Docker setup)
+#   external   — uses a separate signal-cli-rest-api Docker container
+#                (bbernhard/signal-cli-rest-api)
+#
+# See docs/QUICKSTART.md for setup instructions.
+
+api:
+  # Mode: "integrated" or "external"
+  # Can also be set via SIGNAL_MODE environment variable.
+  mode: "integrated"
+
+  # Base URL of the signal-cli API.
+  # Integrated mode: http://127.0.0.1:8080 (auto-managed, usually leave blank)
+  # External mode:   http://signal-api:8080 (your Docker service name)
+  # Can also be set via SIGNAL_API_URL environment variable.
+  base_url: ""
+
+  # Optional bearer token if using a secured proxy (external mode only).
+  # Can also be set via SIGNAL_API_TOKEN environment variable.
+  auth_token: ""
+
+# Registered Signal phone number (E.164 format: +1234567890)
+# This is the number signal-cli is registered/linked with.
+# Can also be set via SIGNAL_PHONE_NUMBER environment variable.
+phone_number: ""
+
+# Allowed contacts — phone numbers or group IDs that the agent may interact with.
+# Empty list = allow all (use with caution).
+allowed_contacts: []
+
+defaults:
+  message_limit: 100
+
+# Memory integration
+memory:
+  auto_save_summaries: true
+  export_format: "markdown"
+
+# Message polling — check for new incoming messages
+polling:
+  interval_seconds: 30
+  auto_analyze_images: true
+
+# Chat bridge — Signal as a chat frontend to Agent Zero
+chat_bridge:
+  auto_start: false
+  # Allowed phone numbers that can use the chat bridge (empty = all contacts).
+  # Only these numbers will get responses when messaging the Signal account.
+  allowed_numbers: []
+
+  # Elevated mode: allows authenticated users to access the full Agent Zero
+  # agent loop (with tools, code execution, file access, etc.) via Signal.
+  # Default is restricted mode (conversation only, no tools).
+  allow_elevated: false
+  # Auth key for elevated mode. Auto-generated on first use if left empty.
+  # Shown in WebUI settings. Required to authenticate via "!auth <key>" in Signal.
+  auth_key: ""
+  # Session timeout in seconds (default: 1 hour). Elevated sessions expire
+  # after this duration and must be re-authenticated.
+  session_timeout: 3600
+
+# Security — prompt injection defense & access control
+security:
+  max_message_length: 4000
+  max_bulk_input_chars: 200000
+  sanitize_content: true
+  strip_injection_patterns: true
+  # Require messages to come from allowed_contacts only (strict mode).
+  # When false, any Signal user who knows the number can message the bridge.
+  strict_contact_enforcement: false
