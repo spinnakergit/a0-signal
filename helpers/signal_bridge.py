@@ -566,12 +566,15 @@ async def _poll_loop():
             logger.info(f"Signal chat bridge started (could not verify API: {e})")
 
         poll_interval = config.get("polling", {}).get("interval_seconds", 30)
-        bridge_config = config.get("chat_bridge", {})
-        allowed_numbers = bridge_config.get("allowed_numbers", [])
-        chat_contacts = get_chat_contacts()
 
         while _bridge_running:
             try:
+                # Reload contacts and allowlist each cycle so changes take
+                # effect without restarting the bridge.
+                bridge_config = config.get("chat_bridge", {})
+                allowed_numbers = bridge_config.get("allowed_numbers", [])
+                chat_contacts = get_chat_contacts()
+
                 envelopes = await client.receive_messages(timeout_seconds=1)
 
                 for env in envelopes or []:
