@@ -1,4 +1,4 @@
-<div class="signal-config" id="signal-config-root" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px;">
+<div class="signal-config" data-sig="root" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px;">
     <h3 style="color: #3a76f0; margin: 0 0 16px 0;">Signal Settings</h3>
 
     <!-- Installation Mode -->
@@ -6,10 +6,10 @@
         <div style="font-size: 12px; font-weight: 600; color: #1565c0; text-transform: uppercase; margin-bottom: 8px;">Installation Mode</div>
         <div style="display: flex; gap: 12px; margin-bottom: 8px;">
             <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
-                <input type="radio" name="sig-mode" data-sig="mode-integrated" value="integrated" checked> <strong>Integrated</strong>
+                <input type="radio" name="sig-mode" data-sig="mode-integrated" value="integrated" checked onchange="window._sigConfig.toggleMode()"> <strong>Integrated</strong>
             </label>
             <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
-                <input type="radio" name="sig-mode" data-sig="mode-external" value="external"> <strong>External</strong>
+                <input type="radio" name="sig-mode" data-sig="mode-external" value="external" onchange="window._sigConfig.toggleMode()"> <strong>External</strong>
             </label>
         </div>
         <div data-sig="mode-info-integrated" style="font-size: 10px; color: #1565c0;">
@@ -99,20 +99,20 @@
                 Default mode is restricted (chat only, no tools).
             </div>
             <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 8px;">
-                <input type="checkbox" data-sig="allow-elevated"> Allow elevated mode
+                <input type="checkbox" data-sig="allow-elevated" onchange="window._sigConfig.toggleElevated()"> Allow elevated mode
             </label>
             <div data-sig="elevated-settings" style="display: none; margin-top: 8px;">
                 <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Auth Key</label>
                 <div style="display: flex; gap: 6px; align-items: center;">
                     <input type="text" data-sig="auth-key" readonly style="flex: 1; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 11px; font-family: monospace; background: var(--bg-secondary, #f5f5f5); box-sizing: border-box;">
-                    <button data-sig="regen-key-btn" style="background: #3a76f0; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;">Regenerate</button>
-                    <button data-sig="copy-key-btn" style="background: var(--bg-secondary, #e0e0e0); color: var(--text-primary, #333); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;">Copy</button>
+                    <button onclick="window._sigConfig.regenKey()" style="background: #3a76f0; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;">Regenerate</button>
+                    <button onclick="window._sigConfig.copyKey(this)" style="background: var(--bg-secondary, #e0e0e0); color: var(--text-primary, #333); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;">Copy</button>
                 </div>
                 <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 4px;">
                     Share this key securely (in person or via another E2E encrypted channel). Users send <code>!auth &lt;key&gt;</code> via Signal to elevate.
                 </div>
                 <label style="font-size: 12px; font-weight: 500; display: block; margin-top: 10px; margin-bottom: 4px;">Session Timeout</label>
-                <select data-sig="session-timeout" style="padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px;">
+                <select data-sig="session-timeout" onchange="window._sigConfig.toggleNeverExpire()" style="padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px;">
                     <option value="1800">30 minutes</option>
                     <option value="3600" selected>1 hour</option>
                     <option value="7200">2 hours</option>
@@ -142,22 +142,20 @@
         </label>
     </div>
 
-    <button data-sig="save-btn" style="background: #3a76f0; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">Save Signal Settings</button>
+    <button onclick="window._sigConfig.save()" style="background: #3a76f0; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">Save Signal Settings</button>
     <span data-sig="save-status" style="margin-left: 10px; font-size: 12px;"></span>
     <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 8px;">Use this button (not the outer framework Save) to save Signal settings. Sensitive values are stored with restricted file permissions.</div>
 </div>
 
 <script>
 (function() {
-    const fetchApi = globalThis.fetchApi || fetch;
-    const root = document.querySelector('#signal-config-root') ||
-                 document.querySelector('.signal-config') ||
-                 document.currentScript?.parentElement;
+    function fetchApi(url, opts) { return (globalThis.fetchApi || fetch)(url, opts); }
 
-    if (!root) { console.error('[Signal Config] Cannot find config root element'); return; }
+    function root() { return document.querySelector('[data-sig="root"]'); }
 
     function el(key) {
-        return root.querySelector('[data-sig="' + key + '"]');
+        var r = root();
+        return r ? r.querySelector('[data-sig="' + key + '"]') : null;
     }
 
     async function loadConfig() {
@@ -168,11 +166,9 @@
                 body: JSON.stringify({action: 'get'})
             });
             const c = await resp.json();
-            console.log('[Signal Config] Loaded:', JSON.stringify(c));
 
-            // Set mode radio
-            const mode = c.api?.mode || 'integrated';
-            const modeRadio = el('mode-' + mode);
+            var mode = c.api?.mode || 'integrated';
+            var modeRadio = el('mode-' + mode);
             if (modeRadio) modeRadio.checked = true;
             toggleMode();
 
@@ -194,10 +190,10 @@
                 }
                 el('allow-elevated').checked = c.chat_bridge.allow_elevated === true;
                 if (c.chat_bridge.auth_key) el('auth-key').value = c.chat_bridge.auth_key;
-                const timeoutSec = c.chat_bridge.session_timeout;
+                var timeoutSec = c.chat_bridge.session_timeout;
                 if (timeoutSec !== undefined) el('session-timeout').value = String(timeoutSec);
-                toggleElevatedSettings();
-                toggleNeverExpireWarning();
+                toggleElevated();
+                toggleNeverExpire();
             }
             if (c.security) {
                 el('sanitize-content').checked = c.security.sanitize_content !== false;
@@ -210,49 +206,43 @@
     }
 
     function toggleMode() {
-        const isExternal = el('mode-external')?.checked;
-        // Mode info text
-        const infoInt = el('mode-info-integrated');
-        const infoExt = el('mode-info-external');
+        var isExternal = el('mode-external')?.checked;
+        var infoInt = el('mode-info-integrated');
+        var infoExt = el('mode-info-external');
         if (infoInt) infoInt.style.display = isExternal ? 'none' : 'block';
         if (infoExt) infoExt.style.display = isExternal ? 'block' : 'none';
-        // API hints
-        const hintInt = el('api-hint-integrated');
-        const hintExt = el('api-hint-external');
+        var hintInt = el('api-hint-integrated');
+        var hintExt = el('api-hint-external');
         if (hintInt) hintInt.style.display = isExternal ? 'none' : 'block';
         if (hintExt) hintExt.style.display = isExternal ? 'block' : 'none';
-        // URL hints
-        const urlHintInt = el('url-hint-integrated');
-        const urlHintExt = el('url-hint-external');
+        var urlHintInt = el('url-hint-integrated');
+        var urlHintExt = el('url-hint-external');
         if (urlHintInt) urlHintInt.style.display = isExternal ? 'none' : 'block';
         if (urlHintExt) urlHintExt.style.display = isExternal ? 'block' : 'none';
-        // URL placeholder
-        const urlInput = el('api-url');
+        var urlInput = el('api-url');
         if (urlInput) urlInput.placeholder = isExternal ? 'http://signal-api:8080' : 'http://127.0.0.1:8080';
-        // Token section (external only)
-        const tokenSec = el('token-section');
+        var tokenSec = el('token-section');
         if (tokenSec) tokenSec.style.display = isExternal ? 'block' : 'none';
     }
 
-    function toggleElevatedSettings() {
-        const show = el('allow-elevated')?.checked;
-        const settings = el('elevated-settings');
+    function toggleElevated() {
+        var show = el('allow-elevated')?.checked;
+        var settings = el('elevated-settings');
         if (settings) settings.style.display = show ? 'block' : 'none';
     }
 
-    function toggleNeverExpireWarning() {
-        const val = el('session-timeout')?.value;
-        const warning = el('never-expire-warning');
+    function toggleNeverExpire() {
+        var val = el('session-timeout')?.value;
+        var warning = el('never-expire-warning');
         if (warning) warning.style.display = val === '0' ? 'block' : 'none';
     }
 
     async function saveConfig() {
-        const status = el('save-status');
+        var status = el('save-status');
+        var selectedMode = el('mode-external')?.checked ? 'external' : 'integrated';
+        var defaultUrl = selectedMode === 'external' ? 'http://signal-api:8080' : '';
 
-        const selectedMode = el('mode-external')?.checked ? 'external' : 'integrated';
-        const defaultUrl = selectedMode === 'external' ? 'http://signal-api:8080' : '';
-
-        const config = {
+        var config = {
             action: 'set',
             api: {
                 mode: selectedMode,
@@ -260,7 +250,7 @@
                 auth_token: el('api-token')?.value || ''
             },
             phone_number: el('phone-number')?.value || '',
-            allowed_contacts: (el('allowed-contacts')?.value || '').split('\n').map(s => s.trim()).filter(Boolean),
+            allowed_contacts: (el('allowed-contacts')?.value || '').split('\n').map(function(s){return s.trim()}).filter(Boolean),
             defaults: { message_limit: 100 },
             memory: {
                 auto_save_summaries: el('auto-summaries')?.checked ?? true,
@@ -272,7 +262,7 @@
             },
             chat_bridge: {
                 auto_start: el('bridge-autostart')?.checked ?? false,
-                allowed_numbers: (el('bridge-numbers')?.value || '').split('\n').map(s => s.trim()).filter(Boolean),
+                allowed_numbers: (el('bridge-numbers')?.value || '').split('\n').map(function(s){return s.trim()}).filter(Boolean),
                 allow_elevated: el('allow-elevated')?.checked ?? false,
                 auth_key: el('auth-key')?.value || '',
                 session_timeout: parseInt(el('session-timeout')?.value) || 3600
@@ -286,17 +276,13 @@
             }
         };
 
-        console.log('[Signal Config] Saving...');
-
         try {
-            const resp = await fetchApi('/api/plugins/signal/signal_config_api', {
+            var resp = await fetchApi('/api/plugins/signal/signal_config_api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(config)
             });
-            const result = await resp.json();
-            console.log('[Signal Config] Save result:', JSON.stringify(result));
-
+            var result = await resp.json();
             if (result.ok) {
                 status.style.color = '#2e7d32';
                 status.textContent = 'Saved!';
@@ -304,63 +290,38 @@
                 status.style.color = '#c62828';
                 status.textContent = 'Error: ' + (result.error || 'Unknown');
             }
-            setTimeout(() => { status.textContent = ''; }, 5000);
+            setTimeout(function() { status.textContent = ''; }, 5000);
         } catch (e) {
             status.style.color = '#c62828';
             status.textContent = 'Network error: ' + e.message;
-            console.error('[Signal Config] Save error:', e);
         }
     }
 
-    // Bind save button
-    const saveBtn = el('save-btn');
-    if (saveBtn) saveBtn.addEventListener('click', saveConfig);
-
-    // Bind mode radio buttons
-    const modeInt = el('mode-integrated');
-    const modeExt = el('mode-external');
-    if (modeInt) modeInt.addEventListener('change', toggleMode);
-    if (modeExt) modeExt.addEventListener('change', toggleMode);
-
-    // Bind elevated mode toggle
-    const elevatedToggle = el('allow-elevated');
-    if (elevatedToggle) elevatedToggle.addEventListener('change', toggleElevatedSettings);
-
-    // Bind session timeout change
-    const timeoutSelect = el('session-timeout');
-    if (timeoutSelect) timeoutSelect.addEventListener('change', toggleNeverExpireWarning);
-
-    // Bind regenerate key button
-    const regenBtn = el('regen-key-btn');
-    if (regenBtn) regenBtn.addEventListener('click', async function() {
+    async function regenKey() {
         try {
-            const resp = await fetchApi('/api/plugins/signal/signal_config_api', {
+            var resp = await fetchApi('/api/plugins/signal/signal_config_api', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({action: 'generate_auth_key'})
             });
-            const result = await resp.json();
-            if (result.auth_key) {
-                el('auth-key').value = result.auth_key;
-            }
+            var result = await resp.json();
+            if (result.auth_key) el('auth-key').value = result.auth_key;
         } catch (e) {
             console.error('[Signal Config] Key generation error:', e);
         }
-    });
+    }
 
-    // Bind copy key button
-    const copyBtn = el('copy-key-btn');
-    if (copyBtn) copyBtn.addEventListener('click', function() {
-        const key = el('auth-key')?.value;
+    function copyKey(btn) {
+        var key = el('auth-key')?.value;
         if (key) {
-            navigator.clipboard.writeText(key).then(() => {
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+            navigator.clipboard.writeText(key).then(function() {
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
             });
         }
-    });
+    }
 
-    // Load config on init
-    loadConfig();
+    window._sigConfig = { save: saveConfig, toggleMode: toggleMode, toggleElevated: toggleElevated, toggleNeverExpire: toggleNeverExpire, regenKey: regenKey, copyKey: copyKey };
+    setTimeout(loadConfig, 50);
 })();
 </script>

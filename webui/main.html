@@ -16,7 +16,7 @@
     </div>
 
     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
-        <button data-sig="test-btn" style="background: #3a76f0; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Test Connection</button>
+        <button data-sig="test-btn" onclick="window._sigMain.testConnection()" style="background: #3a76f0; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Test Connection</button>
     </div>
 
     <!-- Security Info -->
@@ -31,9 +31,9 @@
             <span data-sig="bridge-status" style="padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; background: #f5f5f5; color: #888;">Unknown</span>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
-            <button data-sig="bridge-start" style="background: #43a047; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Start Bridge</button>
-            <button data-sig="bridge-stop" style="background: #e53935; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Stop Bridge</button>
-            <button data-sig="bridge-refresh" style="background: var(--bg-secondary, #f0f0f0); color: var(--text-primary, #333); border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Refresh Status</button>
+            <button data-sig="bridge-start" onclick="window._sigMain.bridgeAction('start', this)" style="background: #43a047; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Start Bridge</button>
+            <button data-sig="bridge-stop" onclick="window._sigMain.bridgeAction('stop', this)" style="background: #e53935; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Stop Bridge</button>
+            <button data-sig="bridge-refresh" onclick="window._sigMain.bridgeAction('status', this)" style="background: var(--bg-secondary, #f0f0f0); color: var(--text-primary, #333); border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;">Refresh Status</button>
         </div>
         <div data-sig="bridge-info" style="font-size: 11px; color: var(--text-secondary, #888);"></div>
     </div>
@@ -41,7 +41,7 @@
 
 <script>
 (function() {
-    const fetchApi = globalThis.fetchApi || fetch;
+    function fetchApi(url, opts) { return (globalThis.fetchApi || fetch)(url, opts); }
     const API_TEST = '/api/plugins/signal/signal_test';
     const API_BRIDGE = '/api/plugins/signal/signal_bridge_api';
 
@@ -123,14 +123,7 @@
         }
     }
 
-    // Bind buttons
-    $('test-btn').addEventListener('click', testConnection);
-    $('bridge-start').addEventListener('click', function() { bridgeAction('start', this); });
-    $('bridge-stop').addEventListener('click', function() { bridgeAction('stop', this); });
-    $('bridge-refresh').addEventListener('click', function() { bridgeAction('status', this); });
-
-    // Auto-check on load
-    testConnection();
-    bridgeAction('status');
+    window._sigMain = { testConnection: testConnection, bridgeAction: bridgeAction };
+    setTimeout(function() { testConnection(); bridgeAction('status'); }, 50);
 })();
 </script>
