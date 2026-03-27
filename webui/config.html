@@ -1,327 +1,299 @@
-<div class="signal-config" data-sig="root" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px;">
-    <h3 style="color: #3a76f0; margin: 0 0 16px 0;">Signal Settings</h3>
+<html>
+<head><title>Signal</title></head>
+<body>
+    <div x-data x-init="
+        if (!config.api) config.api = {};
+        if (!config.api.mode) config.api.mode = 'integrated';
+        if (!config.defaults) config.defaults = {};
+        if (!config.memory) config.memory = {};
+        if (!config.polling) config.polling = {};
+        if (!config.chat_bridge) config.chat_bridge = {};
+        if (!config.security) config.security = {};
+        if (config.allowed_contacts === undefined) config.allowed_contacts = [];
+        if (config.chat_bridge.allowed_numbers === undefined) config.chat_bridge.allowed_numbers = [];
+    ">
+        <template x-if="config">
+            <div>
+                <!-- Installation Mode -->
+                <div class="section-title">Installation Mode</div>
+                <div class="section-description">
+                    <strong>Integrated:</strong> signal-cli runs natively inside the Agent Zero container (simplest).
+                    <strong>External:</strong> uses a separate <code>signal-cli-rest-api</code> Docker container.
+                </div>
 
-    <!-- Installation Mode -->
-    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid #3a76f0; border-radius: 6px; background: #e3f2fd;">
-        <div style="font-size: 12px; font-weight: 600; color: #1565c0; text-transform: uppercase; margin-bottom: 8px;">Installation Mode</div>
-        <div style="display: flex; gap: 12px; margin-bottom: 8px;">
-            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
-                <input type="radio" name="sig-mode" data-sig="mode-integrated" value="integrated" checked onchange="window._sigConfig.toggleMode()"> <strong>Integrated</strong>
-            </label>
-            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
-                <input type="radio" name="sig-mode" data-sig="mode-external" value="external" onchange="window._sigConfig.toggleMode()"> <strong>External</strong>
-            </label>
-        </div>
-        <div data-sig="mode-info-integrated" style="font-size: 10px; color: #1565c0;">
-            signal-cli runs natively inside the Agent Zero container. Simplest setup — no separate Docker container needed.
-            Run <code>python initialize.py --integrated</code> to install.
-        </div>
-        <div data-sig="mode-info-external" style="font-size: 10px; color: #1565c0; display: none;">
-            Uses a separate <code>signal-cli-rest-api</code> Docker container (bbernhard). See docs/SETUP_SIGNAL_API.md for setup.
-        </div>
-    </div>
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Mode</div>
+                        <div class="field-description">How signal-cli connects to Agent Zero.</div>
+                    </div>
+                    <div class="field-control">
+                        <select x-model="config.api.mode">
+                            <option value="integrated">Integrated (built-in)</option>
+                            <option value="external">External (Docker container)</option>
+                        </select>
+                    </div>
+                </div>
 
-    <!-- Signal API Connection -->
-    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Signal API Connection</div>
-        <div data-sig="api-hint-integrated" style="font-size: 10px; color: var(--text-secondary, #888); margin-bottom: 8px;">
-            The local signal-cli daemon runs on <code>127.0.0.1:8080</code>. Usually no configuration needed.
-        </div>
-        <div data-sig="api-hint-external" style="font-size: 10px; color: var(--text-secondary, #888); margin-bottom: 8px; display: none;">
-            Requires a running <code>signal-cli-rest-api</code> instance.
-            Keep the API on a private Docker network — never expose to the internet.
-        </div>
-        <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">API Base URL</label>
-        <input type="text" data-sig="api-url" placeholder="http://127.0.0.1:8080" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box;">
-        <div data-sig="url-hint-integrated" style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">Leave blank for default (127.0.0.1:8080).</div>
-        <div data-sig="url-hint-external" style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px; display: none;">Internal Docker URL of the signal-cli-rest-api container (e.g. http://signal-api:8080).</div>
+                <!-- Signal API Connection -->
+                <div class="section-title">Signal API Connection</div>
+                <div class="section-description" x-show="config.api.mode === 'integrated'">
+                    The local signal-cli daemon runs on <code>127.0.0.1:8080</code>. Usually no configuration needed.
+                </div>
+                <div class="section-description" x-show="config.api.mode === 'external'">
+                    Requires a running <code>signal-cli-rest-api</code> instance. Keep the API on a private Docker network.
+                </div>
 
-        <div data-sig="token-section" style="display: none;">
-            <label style="font-size: 12px; font-weight: 500; display: block; margin-top: 10px; margin-bottom: 4px;">API Auth Token (Optional)</label>
-            <input type="password" data-sig="api-token" placeholder="Bearer token for secured proxy" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box;">
-            <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">Only needed if using a secured proxy (e.g. secured-signal-api).</div>
-        </div>
-    </div>
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">API Base URL</div>
+                        <div class="field-description" x-show="config.api.mode === 'integrated'">Leave blank for default (127.0.0.1:8080).</div>
+                        <div class="field-description" x-show="config.api.mode === 'external'">Internal Docker URL (e.g. http://signal-api:8080).</div>
+                    </div>
+                    <div class="field-control">
+                        <input type="text" x-model="config.api.base_url"
+                            :placeholder="config.api.mode === 'external' ? 'http://signal-api:8080' : 'http://127.0.0.1:8080'" />
+                    </div>
+                </div>
 
-    <!-- Phone Number -->
-    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Registered Phone Number</div>
-        <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Signal Phone Number</label>
-        <input type="text" data-sig="phone-number" placeholder="+1234567890" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box;">
-        <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">E.164 format. This is the number registered/linked with signal-cli. Use a dedicated number, not your personal one.</div>
-    </div>
+                <div class="field" x-show="config.api.mode === 'external'">
+                    <div class="field-label">
+                        <div class="field-title">API Auth Token (Optional)</div>
+                        <div class="field-description">Only needed if using a secured proxy.</div>
+                    </div>
+                    <div class="field-control">
+                        <input type="password" x-model="config.api.auth_token" placeholder="Bearer token" />
+                    </div>
+                </div>
 
-    <!-- Security: Allowed Contacts -->
-    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Access Control</div>
-        <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Allowed Contacts (one per line)</label>
-        <textarea data-sig="allowed-contacts" rows="3" placeholder="Leave empty for all contacts (use with caution)" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box; resize: vertical;"></textarea>
-        <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">Phone numbers or group IDs. Empty = allow all.</div>
-    </div>
+                <!-- Phone Number -->
+                <div class="section-title">Registered Phone Number</div>
 
-    <!-- Memory -->
-    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Memory</div>
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer;">
-            <input type="checkbox" data-sig="auto-summaries" checked> Auto-save summaries to memory
-        </label>
-    </div>
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Signal Phone Number</div>
+                        <div class="field-description">E.164 format (e.g. +1234567890). The number registered/linked with signal-cli. Use a dedicated number.</div>
+                    </div>
+                    <div class="field-control">
+                        <input type="text" x-model="config.phone_number" placeholder="+1234567890" />
+                    </div>
+                </div>
 
-    <!-- Polling -->
-    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Message Polling</div>
-        <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Poll Interval (seconds)</label>
-        <input type="number" data-sig="poll-interval" value="30" min="5" max="300" style="width: 80px; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px;">
-        <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">How often to check for new messages when the bridge is running (5-300 seconds).</div>
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 8px; cursor: pointer;">
-            <input type="checkbox" data-sig="auto-images" checked> Auto-analyze image attachments
-        </label>
-    </div>
+                <!-- Access Control -->
+                <div class="section-title">Access Control</div>
 
-    <!-- Chat Bridge -->
-    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid var(--border-color, #e0e0e0); border-radius: 6px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #666); text-transform: uppercase; margin-bottom: 8px;">Chat Bridge</div>
-        <div style="font-size: 11px; color: var(--text-secondary, #888); margin-bottom: 8px;">
-            Route Signal messages through Agent Zero's LLM. Contacts are managed via the <code>signal_chat</code> tool.
-        </div>
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 8px;">
-            <input type="checkbox" data-sig="bridge-autostart"> Auto-start chat bridge on agent startup
-        </label>
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Allowed Contacts</div>
+                        <div class="field-description">Phone numbers or group IDs, one per line. Leave empty to allow all (use with caution).</div>
+                    </div>
+                    <div class="field-control">
+                        <textarea rows="3"
+                            :value="(config.allowed_contacts || []).join('\n')"
+                            @input="config.allowed_contacts = $event.target.value.split('\n').map(s => s.trim()).filter(Boolean)"
+                            placeholder="Leave empty for all contacts"></textarea>
+                    </div>
+                </div>
 
-        <label style="font-size: 12px; font-weight: 500; display: block; margin-top: 8px; margin-bottom: 4px;">Allowed Bridge Numbers (one per line)</label>
-        <textarea data-sig="bridge-numbers" rows="2" placeholder="Leave empty to use allowed contacts list" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px; box-sizing: border-box; resize: vertical;"></textarea>
-        <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">Only these numbers will get responses. Empty = use allowed_contacts.</div>
+                <!-- Memory -->
+                <div class="section-title">Memory</div>
 
-        <div style="border-top: 1px solid var(--border-color, #e0e0e0); padding-top: 10px; margin-top: 12px;">
-            <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary, #666); margin-bottom: 6px;">Elevated Mode (2FA)</div>
-            <div style="font-size: 10px; color: var(--text-secondary, #888); margin-bottom: 8px;">
-                When enabled, authenticated users can unlock full Agent Zero access from Signal using <code>!auth &lt;key&gt;</code>.
-                Default mode is restricted (chat only, no tools).
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Auto-save summaries</div>
+                        <div class="field-description">Automatically save conversation summaries to agent memory.</div>
+                    </div>
+                    <div class="field-control">
+                        <label class="toggle">
+                            <input type="checkbox" x-model="config.memory.auto_save_summaries"
+                                x-init="if (config.memory.auto_save_summaries === undefined) config.memory.auto_save_summaries = true" />
+                            <span class="toggler"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Polling -->
+                <div class="section-title">Message Polling</div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Poll interval (seconds)</div>
+                        <div class="field-description">How often to check for new messages when the bridge is running (5-300).</div>
+                    </div>
+                    <div class="field-control">
+                        <input type="number" min="5" max="300" x-model.number="config.polling.interval_seconds"
+                            x-init="if (!config.polling.interval_seconds) config.polling.interval_seconds = 30" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Auto-analyze image attachments</div>
+                        <div class="field-description">Automatically analyze image attachments when processing messages.</div>
+                    </div>
+                    <div class="field-control">
+                        <label class="toggle">
+                            <input type="checkbox" x-model="config.polling.auto_analyze_images"
+                                x-init="if (config.polling.auto_analyze_images === undefined) config.polling.auto_analyze_images = true" />
+                            <span class="toggler"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Chat Bridge -->
+                <div class="section-title">Chat Bridge</div>
+                <div class="section-description">
+                    Route Signal messages through Agent Zero's LLM. Contacts are managed via the <code>signal_chat</code> tool.
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Auto-start on agent startup</div>
+                        <div class="field-description">Automatically connect the bridge when Agent Zero starts.</div>
+                    </div>
+                    <div class="field-control">
+                        <label class="toggle">
+                            <input type="checkbox" x-model="config.chat_bridge.auto_start" />
+                            <span class="toggler"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Allowed Bridge Numbers</div>
+                        <div class="field-description">Only these numbers will get responses. Leave empty to use allowed contacts list.</div>
+                    </div>
+                    <div class="field-control">
+                        <textarea rows="2"
+                            :value="(config.chat_bridge.allowed_numbers || []).join('\n')"
+                            @input="config.chat_bridge.allowed_numbers = $event.target.value.split('\n').map(s => s.trim()).filter(Boolean)"
+                            placeholder="One phone number per line"></textarea>
+                    </div>
+                </div>
+
+                <!-- Elevated Mode -->
+                <div class="section-title">Elevated Mode (2FA)</div>
+                <div class="section-description">
+                    When enabled, authenticated users can unlock full Agent Zero access from Signal using <code>!auth &lt;key&gt;</code>.
+                    Default mode is restricted (chat only, no tools).
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Allow elevated mode</div>
+                        <div class="field-description">Grants authenticated users full agent access including code execution and file operations.</div>
+                    </div>
+                    <div class="field-control">
+                        <label class="toggle">
+                            <input type="checkbox" x-model="config.chat_bridge.allow_elevated" />
+                            <span class="toggler"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <template x-if="config.chat_bridge.allow_elevated">
+                    <div>
+                        <div style="background: var(--bg-warning, #fce4ec); border: 1px solid var(--border-warning, #ef9a9a); border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+                            <div style="font-size: 12px; font-weight: 700; color: var(--text-error, #c62828); margin-bottom: 4px;">Security Notice</div>
+                            <div style="font-size: 11px; color: var(--text-error, #b71c1c); line-height: 1.5;">
+                                Elevated mode grants full access to Agent Zero. Use a dedicated Signal number, define allowed contacts, and use short session timeouts.
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="field-label">
+                                <div class="field-title">Auth Key</div>
+                                <div class="field-description">Users send <code>!auth &lt;key&gt;</code> via Signal to elevate. Share this key securely (in person or via E2E encrypted channel).</div>
+                            </div>
+                            <div class="field-control" style="display: flex; gap: 6px; align-items: center;">
+                                <input type="text" x-model="config.chat_bridge.auth_key" readonly
+                                    style="font-family: monospace; flex: 1;" />
+                                <button class="btn btn-field" @click="
+                                    (globalThis.fetchApi || fetch)('/api/plugins/signal/signal_config_api', {
+                                        method: 'POST',
+                                        headers: {'Content-Type': 'application/json'},
+                                        body: JSON.stringify({action: 'generate_auth_key'})
+                                    }).then(r => r.json()).then(d => { if (d.auth_key) config.chat_bridge.auth_key = d.auth_key; })
+                                ">Regenerate</button>
+                                <button class="btn btn-field" @click="
+                                    navigator.clipboard.writeText(config.chat_bridge.auth_key || '').then(() => {
+                                        $event.target.textContent = 'Copied!';
+                                        setTimeout(() => $event.target.textContent = 'Copy', 2000);
+                                    })
+                                ">Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="field-label">
+                                <div class="field-title">Session Timeout</div>
+                                <div class="field-description">How long elevated sessions last before requiring re-authentication.</div>
+                            </div>
+                            <div class="field-control">
+                                <select x-model.number="config.chat_bridge.session_timeout"
+                                    x-init="if (config.chat_bridge.session_timeout === undefined) config.chat_bridge.session_timeout = 3600">
+                                    <option value="1800">30 minutes</option>
+                                    <option value="3600">1 hour</option>
+                                    <option value="7200">2 hours</option>
+                                    <option value="14400">4 hours</option>
+                                    <option value="28800">8 hours</option>
+                                    <option value="0">Never expire</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div x-show="config.chat_bridge.session_timeout == 0"
+                            style="background: var(--bg-warning, #fff3e0); border: 1px solid var(--border-warning, #ffcc80); border-radius: 6px; padding: 8px; font-size: 11px; color: var(--text-warning, #e65100);">
+                            <strong>Security warning:</strong> "Never expire" means an elevated session stays active until the bridge restarts or the user sends <code>!deauth</code>. If the auth key is compromised, the attacker retains full agent access indefinitely.
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Security -->
+                <div class="section-title">Security</div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Sanitize message content</div>
+                        <div class="field-description">Injection defense — sanitize incoming Signal messages before they reach the LLM.</div>
+                    </div>
+                    <div class="field-control">
+                        <label class="toggle">
+                            <input type="checkbox" x-model="config.security.sanitize_content"
+                                x-init="if (config.security.sanitize_content === undefined) config.security.sanitize_content = true" />
+                            <span class="toggler"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Strip prompt injection patterns</div>
+                        <div class="field-description">Remove known injection patterns from incoming messages.</div>
+                    </div>
+                    <div class="field-control">
+                        <label class="toggle">
+                            <input type="checkbox" x-model="config.security.strip_injection_patterns"
+                                x-init="if (config.security.strip_injection_patterns === undefined) config.security.strip_injection_patterns = true" />
+                            <span class="toggler"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">
+                        <div class="field-title">Strict contact enforcement</div>
+                        <div class="field-description">Reject messages from unknown senders (not in allowed contacts list).</div>
+                    </div>
+                    <div class="field-control">
+                        <label class="toggle">
+                            <input type="checkbox" x-model="config.security.strict_contact_enforcement" />
+                            <span class="toggler"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 8px;">
-                <input type="checkbox" data-sig="allow-elevated" onchange="window._sigConfig.toggleElevated()"> Allow elevated mode
-            </label>
-            <div data-sig="elevated-settings" style="display: none; margin-top: 8px;">
-                <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Auth Key</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                    <input type="text" data-sig="auth-key" readonly style="flex: 1; padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 11px; font-family: monospace; background: var(--bg-secondary, #f5f5f5); box-sizing: border-box;">
-                    <button onclick="window._sigConfig.regenKey()" style="background: #3a76f0; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;">Regenerate</button>
-                    <button onclick="window._sigConfig.copyKey(this)" style="background: var(--bg-secondary, #e0e0e0); color: var(--text-primary, #333); border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap;">Copy</button>
-                </div>
-                <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 4px;">
-                    Share this key securely (in person or via another E2E encrypted channel). Users send <code>!auth &lt;key&gt;</code> via Signal to elevate.
-                </div>
-                <label style="font-size: 12px; font-weight: 500; display: block; margin-top: 10px; margin-bottom: 4px;">Session Timeout</label>
-                <select data-sig="session-timeout" onchange="window._sigConfig.toggleNeverExpire()" style="padding: 6px 8px; border: 1px solid var(--border-color, #ddd); border-radius: 4px; font-size: 12px;">
-                    <option value="1800">30 minutes</option>
-                    <option value="3600" selected>1 hour</option>
-                    <option value="7200">2 hours</option>
-                    <option value="14400">4 hours</option>
-                    <option value="28800">8 hours</option>
-                    <option value="0">Never expire</option>
-                </select>
-                <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 2px;">How long elevated sessions last before requiring re-authentication.</div>
-                <div data-sig="never-expire-warning" style="display: none; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 4px; padding: 6px 8px; font-size: 10px; color: #e65100; margin-top: 6px;">
-                    <strong>Security warning:</strong> "Never expire" means an elevated session stays active until the bridge restarts or the user sends <code>!deauth</code>. If the auth key is compromised, the attacker retains full agent access indefinitely.
-                </div>
-            </div>
-        </div>
+        </template>
     </div>
-
-    <!-- Security -->
-    <div style="margin-bottom: 16px; padding: 12px; border: 1px solid #a5d6a7; border-radius: 6px; background: #f1f8e9;">
-        <div style="font-size: 12px; font-weight: 600; color: #2e7d32; text-transform: uppercase; margin-bottom: 8px;">Security</div>
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 6px;">
-            <input type="checkbox" data-sig="sanitize-content" checked> Sanitize message content (injection defense)
-        </label>
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; margin-bottom: 6px;">
-            <input type="checkbox" data-sig="strip-injections" checked> Strip prompt injection patterns
-        </label>
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer;">
-            <input type="checkbox" data-sig="strict-contacts"> Strict contact enforcement (reject unknown senders)
-        </label>
-    </div>
-
-    <button onclick="window._sigConfig.save()" style="background: #3a76f0; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">Save Signal Settings</button>
-    <span data-sig="save-status" style="margin-left: 10px; font-size: 12px;"></span>
-    <div style="font-size: 10px; color: var(--text-tertiary, #999); margin-top: 8px;">Use this button (not the outer framework Save) to save Signal settings. Sensitive values are stored with restricted file permissions.</div>
-</div>
-
-<script>
-(function() {
-    function fetchApi(url, opts) { return (globalThis.fetchApi || fetch)(url, opts); }
-
-    function root() { return document.querySelector('[data-sig="root"]'); }
-
-    function el(key) {
-        var r = root();
-        return r ? r.querySelector('[data-sig="' + key + '"]') : null;
-    }
-
-    async function loadConfig() {
-        try {
-            const resp = await fetchApi('/api/plugins/signal/signal_config_api', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'get'})
-            });
-            const c = await resp.json();
-
-            var mode = c.api?.mode || 'integrated';
-            var modeRadio = el('mode-' + mode);
-            if (modeRadio) modeRadio.checked = true;
-            toggleMode();
-
-            if (c.api?.base_url) el('api-url').value = c.api.base_url;
-            if (c.api?.auth_token) el('api-token').value = c.api.auth_token;
-            if (c.phone_number) el('phone-number').value = c.phone_number;
-            if (c.allowed_contacts?.length) el('allowed-contacts').value = c.allowed_contacts.join('\n');
-            if (c.memory) {
-                el('auto-summaries').checked = c.memory.auto_save_summaries !== false;
-            }
-            if (c.polling) {
-                el('poll-interval').value = c.polling.interval_seconds || 30;
-                el('auto-images').checked = c.polling.auto_analyze_images !== false;
-            }
-            if (c.chat_bridge) {
-                el('bridge-autostart').checked = c.chat_bridge.auto_start === true;
-                if (c.chat_bridge.allowed_numbers?.length) {
-                    el('bridge-numbers').value = c.chat_bridge.allowed_numbers.join('\n');
-                }
-                el('allow-elevated').checked = c.chat_bridge.allow_elevated === true;
-                if (c.chat_bridge.auth_key) el('auth-key').value = c.chat_bridge.auth_key;
-                var timeoutSec = c.chat_bridge.session_timeout;
-                if (timeoutSec !== undefined) el('session-timeout').value = String(timeoutSec);
-                toggleElevated();
-                toggleNeverExpire();
-            }
-            if (c.security) {
-                el('sanitize-content').checked = c.security.sanitize_content !== false;
-                el('strip-injections').checked = c.security.strip_injection_patterns !== false;
-                el('strict-contacts').checked = c.security.strict_contact_enforcement === true;
-            }
-        } catch (e) {
-            console.error('[Signal Config] Load error:', e);
-        }
-    }
-
-    function toggleMode() {
-        var isExternal = el('mode-external')?.checked;
-        var infoInt = el('mode-info-integrated');
-        var infoExt = el('mode-info-external');
-        if (infoInt) infoInt.style.display = isExternal ? 'none' : 'block';
-        if (infoExt) infoExt.style.display = isExternal ? 'block' : 'none';
-        var hintInt = el('api-hint-integrated');
-        var hintExt = el('api-hint-external');
-        if (hintInt) hintInt.style.display = isExternal ? 'none' : 'block';
-        if (hintExt) hintExt.style.display = isExternal ? 'block' : 'none';
-        var urlHintInt = el('url-hint-integrated');
-        var urlHintExt = el('url-hint-external');
-        if (urlHintInt) urlHintInt.style.display = isExternal ? 'none' : 'block';
-        if (urlHintExt) urlHintExt.style.display = isExternal ? 'block' : 'none';
-        var urlInput = el('api-url');
-        if (urlInput) urlInput.placeholder = isExternal ? 'http://signal-api:8080' : 'http://127.0.0.1:8080';
-        var tokenSec = el('token-section');
-        if (tokenSec) tokenSec.style.display = isExternal ? 'block' : 'none';
-    }
-
-    function toggleElevated() {
-        var show = el('allow-elevated')?.checked;
-        var settings = el('elevated-settings');
-        if (settings) settings.style.display = show ? 'block' : 'none';
-    }
-
-    function toggleNeverExpire() {
-        var val = el('session-timeout')?.value;
-        var warning = el('never-expire-warning');
-        if (warning) warning.style.display = val === '0' ? 'block' : 'none';
-    }
-
-    async function saveConfig() {
-        var status = el('save-status');
-        var selectedMode = el('mode-external')?.checked ? 'external' : 'integrated';
-        var defaultUrl = selectedMode === 'external' ? 'http://signal-api:8080' : '';
-
-        var config = {
-            action: 'set',
-            api: {
-                mode: selectedMode,
-                base_url: el('api-url')?.value || defaultUrl,
-                auth_token: el('api-token')?.value || ''
-            },
-            phone_number: el('phone-number')?.value || '',
-            allowed_contacts: (el('allowed-contacts')?.value || '').split('\n').map(function(s){return s.trim()}).filter(Boolean),
-            defaults: { message_limit: 100 },
-            memory: {
-                auto_save_summaries: el('auto-summaries')?.checked ?? true,
-                export_format: "markdown"
-            },
-            polling: {
-                interval_seconds: parseInt(el('poll-interval')?.value) || 30,
-                auto_analyze_images: el('auto-images')?.checked ?? true
-            },
-            chat_bridge: {
-                auto_start: el('bridge-autostart')?.checked ?? false,
-                allowed_numbers: (el('bridge-numbers')?.value || '').split('\n').map(function(s){return s.trim()}).filter(Boolean),
-                allow_elevated: el('allow-elevated')?.checked ?? false,
-                auth_key: el('auth-key')?.value || '',
-                session_timeout: parseInt(el('session-timeout')?.value) || 3600
-            },
-            security: {
-                max_message_length: 4000,
-                max_bulk_input_chars: 200000,
-                sanitize_content: el('sanitize-content')?.checked ?? true,
-                strip_injection_patterns: el('strip-injections')?.checked ?? true,
-                strict_contact_enforcement: el('strict-contacts')?.checked ?? false
-            }
-        };
-
-        try {
-            var resp = await fetchApi('/api/plugins/signal/signal_config_api', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config)
-            });
-            var result = await resp.json();
-            if (result.ok) {
-                status.style.color = '#2e7d32';
-                status.textContent = 'Saved!';
-            } else {
-                status.style.color = '#c62828';
-                status.textContent = 'Error: ' + (result.error || 'Unknown');
-            }
-            setTimeout(function() { status.textContent = ''; }, 5000);
-        } catch (e) {
-            status.style.color = '#c62828';
-            status.textContent = 'Network error: ' + e.message;
-        }
-    }
-
-    async function regenKey() {
-        try {
-            var resp = await fetchApi('/api/plugins/signal/signal_config_api', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'generate_auth_key'})
-            });
-            var result = await resp.json();
-            if (result.auth_key) el('auth-key').value = result.auth_key;
-        } catch (e) {
-            console.error('[Signal Config] Key generation error:', e);
-        }
-    }
-
-    function copyKey(btn) {
-        var key = el('auth-key')?.value;
-        if (key) {
-            navigator.clipboard.writeText(key).then(function() {
-                btn.textContent = 'Copied!';
-                setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
-            });
-        }
-    }
-
-    window._sigConfig = { save: saveConfig, toggleMode: toggleMode, toggleElevated: toggleElevated, toggleNeverExpire: toggleNeverExpire, regenKey: regenKey, copyKey: copyKey };
-    setTimeout(loadConfig, 50);
-})();
-</script>
+</body>
+</html>
