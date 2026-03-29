@@ -138,6 +138,20 @@ def main():
     if failed:
         print(f"[Signal Plugin] Failed to install: {', '.join(failed)}")
         return 1
+    # Ensure symlink exists for plugin namespace imports
+    plugin_dir = Path(__file__).resolve().parent
+    for root in [Path("/a0"), Path("/git/agent-zero")]:
+        plugins_dir = root / "plugins"
+        if plugins_dir.is_dir():
+            symlink = plugins_dir / "signal"
+            if not symlink.exists():
+                try:
+                    symlink.symlink_to(plugin_dir)
+                    print(f"[Signal Plugin] Created symlink: {symlink} -> {plugin_dir}")
+                except OSError as e:
+                    print(f"[Signal Plugin] WARNING: Could not create symlink: {e}")
+            break
+
     print("[Signal Plugin] All Python dependencies ready.")
 
     # Step 2: signal-cli native binary (only for integrated mode)
