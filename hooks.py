@@ -74,7 +74,20 @@ def install(**kwargs):
         bridge_dest.chmod(0o755)
         print(f"[{plugin_name}] Bridge runner installed at: {bridge_dest}")
 
-    # 5. Create extension symlink for agent_init
+    # 5. Create supervisor config for persistent bridge polling
+    if bridge_dest.exists():
+        try:
+            sys.path.insert(0, str(a0_root))
+            from plugins.signal.helpers.signal_daemon import create_bridge_supervisor_config
+            create_bridge_supervisor_config(autostart=True)
+            print(f"[{plugin_name}] Bridge supervisor config created")
+        except Exception as e:
+            print(f"[{plugin_name}] Warning: could not create bridge supervisor config: {e}")
+        finally:
+            if str(a0_root) in sys.path:
+                sys.path.remove(str(a0_root))
+
+    # 6. Create extension symlink for agent_init
     # A0 only scans /a0/extensions/python/agent_init/, not plugin subdirectories
     init_ext_src = plugin_dir / "extensions" / "python" / "agent_init" / "_10_signal_chat.py"
     init_ext_dst = a0_root / "extensions" / "python" / "agent_init" / "_10_signal_chat.py"
@@ -83,7 +96,7 @@ def install(**kwargs):
         init_ext_dst.symlink_to(init_ext_src)
         print(f"[{plugin_name}] Created extension symlink: {init_ext_dst}")
 
-    # 6. Install skills
+    # 7. Install skills
     skills_src = plugin_dir / "skills"
     skills_dst = a0_root / "usr" / "skills"
     if skills_src.is_dir():
@@ -97,7 +110,7 @@ def install(**kwargs):
                         dest.write_bytes(f.read_bytes())
                 print(f"[{plugin_name}] Installed skill: {skill_dir.name}")
 
-    # 7. Install Python dependencies via initialize.py
+    # 8. Install Python dependencies via initialize.py
     init_script = plugin_dir / "initialize.py"
     if init_script.is_file():
         python = _find_python()
@@ -115,7 +128,7 @@ def install(**kwargs):
         except subprocess.TimeoutExpired:
             print(f"[{plugin_name}] Warning: dependency install timed out")
 
-    # 8. Mirror to /git/agent-zero if running in /a0 runtime
+    # 9. Mirror to /git/agent-zero if running in /a0 runtime
     if str(a0_root) == "/a0" and Path("/git/agent-zero/usr").is_dir():
         git_plugin = Path("/git/agent-zero/usr/plugins") / plugin_name
         if not git_plugin.exists():
@@ -144,6 +157,14 @@ def uninstall(**kwargs):
         import shutil
         shutil.rmtree(str(symlink))
         print(f"[{plugin_name}] Removed directory: {symlink}")
+
+    # Stop bridge and remove supervisor config
+    try:
+        from plugins.signal.helpers.signal_daemon import remove_supervisor_config
+        remove_supervisor_config()
+        print(f"[{plugin_name}] Removed supervisor config")
+    except Exception:
+        pass
 
     # Remove bridge runner
     bridge_dest = a0_root / "run_signal_bridge.py"
